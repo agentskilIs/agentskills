@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
@@ -15,6 +16,23 @@ import (
 )
 
 var root = filepath.Join("..", "..", "conformance")
+
+// skillPath matches {skill} and the slash-separated path that follows it.
+var skillPath = regexp.MustCompile(`\{skill\}(/[^/\s:'"<]+)*`)
+
+// expand replaces each {skill} path in text with the native path, with the
+// directory and separators passed through quote.
+func expand(text, skill string, quote func(string) string) string {
+	sep := quote(string(filepath.Separator))
+	return skillPath.ReplaceAllStringFunc(text, func(match string) string {
+		return quote(skill) + strings.ReplaceAll(strings.TrimPrefix(match, "{skill}"), "/", sep)
+	})
+}
+
+func jsonQuote(s string) string {
+	quoted, _ := json.Marshal(s)
+	return strings.Trim(string(quoted), `"`)
+}
 
 type testCase struct {
 	ID      string   `json:"id"`
@@ -91,10 +109,12 @@ func TestCases(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			expand := func(text string) string { return strings.ReplaceAll(text, "{skill}", skill) }
+			native := func(text string) string {
+				return expand(text, skill, func(s string) string { return s })
+			}
 			args := []string{tc.Command}
 			for _, arg := range tc.Args {
-				args = append(args, expand(arg))
+				args = append(args, native(arg))
 			}
 			cmd := exec.Command(binary, args...)
 			var stdout, stderr strings.Builder
@@ -110,11 +130,11 @@ func TestCases(t *testing.T) {
 			if code != tc.Expect.ExitCode {
 				t.Errorf("exit code %d, want %d", code, tc.Expect.ExitCode)
 			}
-			if want := expand(tc.Expect.Stderr); stderr.String() != want {
+			if want := native(tc.Expect.Stderr); stderr.String() != want {
 				t.Errorf("stderr:\n%q\nwant:\n%q", stderr.String(), want)
 			}
 			if tc.Expect.StdoutJSON == nil {
-				if want := expand(tc.Expect.Stdout); stdout.String() != want {
+				if want := native(tc.Expect.Stdout); stdout.String() != want {
 					t.Errorf("stdout:\n%q\nwant:\n%q", stdout.String(), want)
 				}
 				return
@@ -123,11 +143,15 @@ func TestCases(t *testing.T) {
 			if err := json.Unmarshal([]byte(stdout.String()), &got); err != nil {
 				t.Fatalf("stdout is not JSON: %s: %v", stdout.String(), err)
 			}
-			// Substitute {skill} in the JSON text, escaped so Windows paths stay valid.
-			escaped, _ := json.Marshal(skill)
-			wantText, _ := json.Marshal(tc.Expect.StdoutJSON)
-			wantText = []byte(strings.ReplaceAll(string(wantText), "{skill}", strings.Trim(string(escaped), `"`)))
-			if err := json.Unmarshal(wantText, &want); err != nil {
+			var buf strings.Builder
+			encoder := json.NewEncoder(&buf)
+			encoder.SetEscapeHTML(false)
+			if err := encoder.Encode(tc.Expect.StdoutJSON); err != nil {
+				t.Fatal(err)
+			}
+			// Substitute in the JSON text, escaped so Windows paths stay valid.
+			wantText := expand(buf.String(), skill, jsonQuote)
+			if err := json.Unmarshal([]byte(wantText), &want); err != nil {
 				t.Fatal(err)
 			}
 			if !reflect.DeepEqual(got, want) {

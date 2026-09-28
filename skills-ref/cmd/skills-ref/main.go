@@ -146,6 +146,11 @@ func parse(set *flag.FlagSet, args []string, help string, stdout, stderr io.Writ
 	if len(paths) == 0 {
 		return nil, usageError(stderr, set.Name(), "missing skill path"), false
 	}
+	// Paths the CLI derives use native separators, so given paths must too;
+	// otherwise Windows output mixes / and \ depending on the command.
+	for i, path := range paths {
+		paths[i] = filepath.FromSlash(path)
+	}
 	return paths, 0, true
 }
 
