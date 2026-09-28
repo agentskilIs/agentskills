@@ -23,7 +23,6 @@ Release URLs and the [installer prompt](INSTALL_PROMPT.md) point to
    - runs the tests;
    - builds the archives with GoReleaser;
    - checks that the binary reports the version;
-   - attests build provenance;
    - uploads the assets;
    - publishes the release and marks it as latest.
 
@@ -77,17 +76,18 @@ quarantined and run directly. Browser downloads need
 4. Merge the release PR. Check that the `publish` job succeeds and that the
    release is published as latest with 14 assets: 6 archives, 6 SBOMs,
    `SKILL.md` and `checksums.txt`.
-5. Verify from a clean machine or container for each OS family:
-   - `gh attestation verify skills-ref_darwin_arm64.tar.gz --repo agentskilIs/agentskills`
-   - Paste [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md) into an agent on macOS, then
-     on Linux and Windows. Confirm `skills-ref validate ~/.agents/skills/skills-ref`
-     reports a valid skill.
+5. Verify from a clean machine or container for each OS family: paste
+   [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md) into an agent on macOS, then on
+   Linux and Windows. Confirm `skills-ref validate ~/.agents/skills/skills-ref`
+   reports a valid skill.
 
 ## Fixing a bad release
 
-- If `publish` fails, the release stays a draft. Fix the cause on `main` and
-  re-run the failed job; `gh release upload --clobber` replaces partial
-  uploads.
+- If `publish` fails, the release stays a draft. Fix the cause on `main`, then
+  run the workflow manually from Actions > skills-ref release > Run workflow
+  with the tag, for example `skills-ref/v1.0.0`. Do not use "Re-run jobs":
+  a re-run uses the workflow file from the original commit and would repeat
+  the failure. `gh release upload --clobber` replaces partial uploads.
 - To withdraw a published release, delete it and its tag
   (`gh release delete skills-ref/vX.Y.Z --cleanup-tag`), then ship a fix in a
   new patch release. Do not reuse a version number.
@@ -103,3 +103,6 @@ make snapshot   # the same archives in dist/, nothing published
 - Notarize the macOS binaries (requires an Apple Developer ID), or publish a
   Homebrew tap.
 - Pin third-party actions to commit SHAs.
+- Add build provenance with `actions/attest-build-provenance` once the
+  repository is public. GitHub does not support attestations for private
+  repositories owned by a personal account.

@@ -83,7 +83,6 @@ Remove-Item -Recurse -Force $tmp
 & "$skillDir\scripts\skills-ref.exe" --version
 ```
 
-If the GitHub CLI is signed in, you can also check build provenance with
-`gh attestation verify <asset> --repo agentskilIs/agentskills`. `curl` downloads are not quarantined on macOS; if the archive came
+`curl` downloads are not quarantined on macOS; if the archive came
 from a browser and macOS blocks the binary, run
 `xattr -d com.apple.quarantine scripts/skills-ref`.

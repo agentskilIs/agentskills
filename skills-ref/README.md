@@ -18,11 +18,10 @@ To install the skill and binary with a coding agent, paste the prompt in
 
 Or download the archive for your platform and `checksums.txt` from the
 [latest release](https://github.com/agentskilIs/agentskills/releases/latest),
-and verify both before use:
+and verify the checksum before use:
 
 ```sh
 sha256sum --ignore-missing -c checksums.txt   # macOS: shasum -a 256 --ignore-missing -c
-gh attestation verify skills-ref_<os>_<arch>.tar.gz --repo agentskilIs/agentskills
 tar -xzf skills-ref_<os>_<arch>.tar.gz skills-ref
 ```
 

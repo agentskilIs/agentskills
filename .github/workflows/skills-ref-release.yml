@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  # Re-publishes an existing draft release with the workflow from the chosen
+  # ref. Re-running a failed job would reuse the workflow from the old commit.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag with a draft release, for example skills-ref/v1.0.0
+        required: true
 
 permissions:
   contents: read
@@ -14,6 +21,7 @@ concurrency:
 
 jobs:
   release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -30,19 +38,25 @@ jobs:
   # The release starts as a draft so the latest release never lacks assets.
   publish:
     needs: release-please
-    if: needs.release-please.outputs.created == 'true'
+    if: >-
+      !cancelled() && (github.event_name == 'workflow_dispatch' ||
+      needs.release-please.outputs.created == 'true')
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write
-      attestations: write
     env:
-      TAG: ${{ needs.release-please.outputs.tag }}
-      VERSION: ${{ needs.release-please.outputs.version }}
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag }}
     steps:
+      - name: Read version from tag
+        run: |
+          case "$TAG" in
+            skills-ref/v[0-9]*) ;;
+            *) echo "Tag '$TAG' is not skills-ref/vX.Y.Z" >&2; exit 1 ;;
+          esac
+          echo "VERSION=${TAG#skills-ref/v}" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release-please.outputs.tag }}
+          ref: ${{ env.TAG }}
           fetch-depth: 0
       - uses: actions/setup-go@v6
         with:
@@ -76,13 +90,6 @@ jobs:
       - name: Stage release assets
         working-directory: skills-ref
         run: cp example/skills-ref/SKILL.md dist/
-      - uses: actions/attest-build-provenance@v4
-        with:
-          subject-path: |
-            skills-ref/dist/*.tar.gz
-            skills-ref/dist/*.zip
-            skills-ref/dist/SKILL.md
-            skills-ref/dist/checksums.txt
       - name: Upload assets and publish
         working-directory: skills-ref/dist
         env:
