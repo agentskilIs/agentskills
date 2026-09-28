@@ -1,0 +1,105 @@
+# Releasing skills-ref
+
+Releases are cut from `main` with
+[release-please](https://github.com/googleapis/release-please) and built with
+GoReleaser in
+[`skills-ref-release.yml`](../.github/workflows/skills-ref-release.yml).
+Release URLs and the [installer prompt](INSTALL_PROMPT.md) point to
+`agentskilIs/agentskills`.
+
+## How a release happens
+
+1. Commits that touch `skills-ref/` land on `main` with
+   [Conventional Commit](https://www.conventionalcommits.org/) messages.
+   Before 1.0.0, `feat:` bumps the minor version, `fix:` bumps the patch, and
+   `feat!:` or a `BREAKING CHANGE:` footer bumps the minor version.
+2. On each push to `main`, the `release-please` job opens or updates a release
+   PR. The PR updates `skills-ref/CHANGELOG.md` and
+   [`.release-please-manifest.json`](../.release-please-manifest.json).
+3. Merging the release PR creates the `skills-ref/vX.Y.Z` tag and a draft
+   GitHub release. This tag format is also the one `go install` uses for a
+   module in a subdirectory.
+4. The `publish` job then runs on that tag:
+   - runs the tests;
+   - builds the archives with GoReleaser;
+   - checks that the binary reports the version;
+   - attests build provenance;
+   - uploads the assets;
+   - publishes the release and marks it as latest.
+
+   The release stays a draft until every asset is uploaded, so
+   `releases/latest` never points at a release without binaries.
+
+## Release assets
+
+| Asset | Contents |
+| --- | --- |
+| `skills-ref_darwin_amd64.tar.gz` | macOS, Intel |
+| `skills-ref_darwin_arm64.tar.gz` | macOS, Apple silicon |
+| `skills-ref_linux_amd64.tar.gz`, `skills-ref_linux_arm64.tar.gz` | Linux |
+| `skills-ref_windows_amd64.zip`, `skills-ref_windows_arm64.zip` | Windows |
+| `SKILL.md` | The installable skill from [`example/skills-ref`](example/skills-ref/SKILL.md) |
+| `checksums.txt` | SHA-256 of every archive and `SKILL.md` |
+| `<archive>.sbom.json` | SPDX SBOM per archive |
+
+Names carry no version, so
+`https://github.com/agentskilIs/agentskills/releases/latest/download/<asset>`
+always serves the newest release. Every archive holds the binary, `README.md`
+and `LICENSE`. Builds are reproducible: file times come from the commit and
+`-trimpath` removes local paths.
+
+The macOS binaries are ad hoc signed by the Go linker, which Apple silicon
+requires, but they are not notarized. Files downloaded with `curl` are not
+quarantined and run directly. Browser downloads need
+`xattr -d com.apple.quarantine skills-ref`.
+
+## One-time repository setup
+
+1. In Settings > Actions > General, set Workflow permissions to "Read and
+   write" and enable "Allow GitHub Actions to create and approve pull
+   requests".
+2. Keep the `bootstrap-sha` in
+   [`release-please-config.json`](../release-please-config.json). It is the
+   last upstream commit before the Go switch, so the first changelog starts
+   with the Go code. Remove it after the first release.
+3. Optional: add a fine-grained token or GitHub App token as a `token` input
+   to the release-please step. With the default `GITHUB_TOKEN`, release PRs do
+   not trigger the `skills-ref` CI workflow.
+
+## Rollout plan
+
+1. Commit the Go switch on a branch with Conventional Commit messages, for
+   example `feat(skills-ref)!: replace Python reference library with Go CLI`.
+2. Push the branch to the fork. Confirm that `skills-ref.yml` passes on
+   ubuntu, macos and windows.
+3. Merge to `main`. Check that release-please opens a PR titled
+   `chore(main): release skills-ref 0.1.0`.
+4. Merge the release PR. Check that the `publish` job succeeds and that the
+   release is published as latest with 14 assets: 6 archives, 6 SBOMs,
+   `SKILL.md` and `checksums.txt`.
+5. Verify from a clean machine or container for each OS family:
+   - `gh attestation verify skills-ref_darwin_arm64.tar.gz --repo agentskilIs/agentskills`
+   - Paste [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md) into an agent on macOS, then
+     on Linux and Windows. Confirm `skills-ref validate ~/.agents/skills/skills-ref`
+     reports a valid skill.
+
+## Fixing a bad release
+
+- If `publish` fails, the release stays a draft. Fix the cause on `main` and
+  re-run the failed job; `gh release upload --clobber` replaces partial
+  uploads.
+- To withdraw a published release, delete it and its tag
+  (`gh release delete skills-ref/vX.Y.Z --cleanup-tag`), then ship a fix in a
+  new patch release. Do not reuse a version number.
+
+## Local checks
+
+```sh
+make snapshot   # the same archives in dist/, nothing published
+```
+
+## Later
+
+- Notarize the macOS binaries (requires an Apple Developer ID), or publish a
+  Homebrew tap.
+- Pin third-party actions to commit SHAs.

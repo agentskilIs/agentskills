@@ -1,94 +1,68 @@
 # skills-ref
 
-Reference library for Agent Skills.
+Reference command-line tool for Agent Skills, written in Go.
 
 > [!IMPORTANT]
-> This library is intended for demonstration purposes only. It is not meant to be used in production.
+> This tool is intended for demonstration purposes only. It is not meant to be used in production.
 
 ## Installation
 
-### macOS / Linux
+With Go 1.26 or later:
 
-Using pip:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .
+```sh
+go install github.com/agentskills/agentskills/skills-ref/cmd/skills-ref@latest
 ```
 
-Or using [uv](https://docs.astral.sh/uv/):
+To install the skill and binary with a coding agent, paste the prompt in
+[`INSTALL_PROMPT.md`](INSTALL_PROMPT.md).
 
-```bash
-uv sync
-source .venv/bin/activate
+Or download the archive for your platform and `checksums.txt` from the
+[latest release](https://github.com/agentskilIs/agentskills/releases/latest),
+and verify both before use:
+
+```sh
+sha256sum --ignore-missing -c checksums.txt   # macOS: shasum -a 256 --ignore-missing -c
+gh attestation verify skills-ref_<os>_<arch>.tar.gz --repo agentskilIs/agentskills
+tar -xzf skills-ref_<os>_<arch>.tar.gz skills-ref
 ```
 
-### Windows
-
-Using pip (PowerShell):
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -e .
-```
-
-Using pip (Command Prompt):
-
-```cmd
-python -m venv .venv
-.venv\Scripts\activate.bat
-pip install -e .
-```
-
-Or using [uv](https://docs.astral.sh/uv/):
-
-```powershell
-uv sync
-.venv\Scripts\Activate.ps1
-```
-
-After installation, the `skills-ref` executable will be available on your `PATH` (within the activated virtual environment).
+`<os>` is `darwin` (macOS), `linux` or `windows`, and `<arch>` is `amd64` or
+`arm64`. Windows archives are `.zip`. Each archive holds the `skills-ref`
+binary, this README and the license, and has an SPDX SBOM
+(`<archive>.sbom.json`). The release also carries the installable
+[`SKILL.md`](example/skills-ref/SKILL.md).
 
 ## Usage
 
-### CLI
-
-```bash
-# Validate a skill
+```sh
 skills-ref validate path/to/skill
-
-# Read skill properties (outputs JSON)
+skills-ref validate --format json path/to/skill
+skills-ref validate --recursive skills/
 skills-ref read-properties path/to/skill
-
-# Generate <available_skills> XML for agent prompts
 skills-ref to-prompt path/to/skill-a path/to/skill-b
+skills-ref help [command]
+skills-ref --version
 ```
 
-### Python API
+Each path is a skill directory or its `SKILL.md` file. Options may come before
+or after paths; arguments after `--` are always paths. Every command exits 0 on
+success, 1 for an invalid or unreadable skill, and 2 for a usage error or a
+path that does not exist.
 
-```python
-from pathlib import Path
-from skills_ref import validate, read_properties, to_prompt
+- `validate --format json` reports stable problem codes and follows
+  [`conformance/schema/validate.json`](conformance/schema/validate.json).
+- `validate --recursive` checks every skill below each path. It follows a
+  symlinked path but not symlinks inside it, reports each skill once, and
+  fails if a path contains no skills.
+- `read-properties` prints the frontmatter as JSON.
+- `to-prompt --skip-invalid` leaves out skills that fail validation and warns
+  on stderr.
 
-# Validate a skill directory
-problems = validate(Path("my-skill"))
-if problems:
-    print("Validation errors:", problems)
+## Agent prompt integration
 
-# Read skill properties
-props = read_properties(Path("my-skill"))
-print(f"Skill: {props.name} - {props.description}")
-
-# Generate prompt for available skills
-prompt = to_prompt([Path("skill-a"), Path("skill-b")])
-print(prompt)
-```
-
-## Agent Prompt Integration
-
-Use `to-prompt` to generate the suggested `<available_skills>` XML block for your agent's system prompt. This format is recommended for Anthropic's models, but Skill Clients may choose to format it differently based on the model being used.
+`to-prompt` prints the suggested `<available_skills>` XML block for an agent's
+system prompt. This format is recommended for Anthropic's models, but clients
+may format it differently for the model they use.
 
 ```xml
 <available_skills>
@@ -106,7 +80,25 @@ What this skill does and when to use it
 </available_skills>
 ```
 
-The `<location>` element tells the agent where to find the full skill instructions.
+The `<location>` element tells the agent where to find the full skill
+instructions.
+
+## Development
+
+```sh
+make build      # ./skills-ref
+make test       # unit and conformance tests with the race detector
+make lint       # gofmt, go vet, staticcheck
+make snapshot   # local release archives in dist/; nothing is published
+```
+
+[`conformance/`](conformance/) holds end-to-end CLI cases that `make test` runs
+against a freshly built binary.
+
+## Releases
+
+Releases are cut from `main` by merging a release PR. See
+[`RELEASING.md`](RELEASING.md).
 
 ## License
 

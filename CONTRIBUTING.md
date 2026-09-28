@@ -64,6 +64,14 @@ cd docs && mint dev
 
 Local preview will be available at `http://localhost:3000`.
 
+### Reference Library
+
+`skills-ref/` is a Go module and needs Go 1.26 or later.
+
+```bash
+cd skills-ref && make test lint
+```
+
 ## Submitting Changes
 
 1. [Fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo)

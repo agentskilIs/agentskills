@@ -1,0 +1,93 @@
+name: skills-ref release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skills-ref-release
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      created: ${{ steps.release.outputs['skills-ref--release_created'] }}
+      tag: ${{ steps.release.outputs['skills-ref--tag_name'] }}
+      version: ${{ steps.release.outputs['skills-ref--version'] }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+
+  # The release starts as a draft so the latest release never lacks assets.
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    env:
+      TAG: ${{ needs.release-please.outputs.tag }}
+      VERSION: ${{ needs.release-please.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version: stable
+          cache-dependency-path: skills-ref/go.sum
+      - name: Test
+        working-directory: skills-ref
+        run: go test ./...
+      # GoReleaser OSS cannot parse prefixed tags. This tag stays local.
+      - name: Tag commit for GoReleaser
+        run: git tag "v$VERSION" HEAD
+      - uses: anchore/sbom-action/download-syft@v0
+      - name: Build archives
+        uses: goreleaser/goreleaser-action@v7
+        with:
+          distribution: goreleaser
+          version: v2.18.2
+          workdir: skills-ref
+          args: release --clean --skip=publish
+        env:
+          GORELEASER_CURRENT_TAG: v${{ env.VERSION }}
+      - name: Check built version
+        working-directory: skills-ref
+        run: |
+          got="$(dist/skills-ref_linux_amd64_v1/skills-ref --version)"
+          want="skills-ref, version $VERSION"
+          if [ "$got" != "$want" ]; then
+            echo "Built binary reports '$got', want '$want'" >&2
+            exit 1
+          fi
+      - name: Stage release assets
+        working-directory: skills-ref
+        run: cp example/skills-ref/SKILL.md dist/
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            skills-ref/dist/*.tar.gz
+            skills-ref/dist/*.zip
+            skills-ref/dist/SKILL.md
+            skills-ref/dist/checksums.txt
+      - name: Upload assets and publish
+        working-directory: skills-ref/dist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$TAG" --clobber \
+            ./*.tar.gz ./*.zip ./*.sbom.json SKILL.md checksums.txt
+          gh release edit "$TAG" --draft=false --latest
