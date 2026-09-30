@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.2](https://github.com/agentskilIs/agentskills/compare/skills-ref/v1.1.1...skills-ref/v1.1.2) (2026-09-30)
+
+
+### Bug Fixes
+
+* **skills-ref:** point module path at the agentskilIs repository ([9fa26d4](https://github.com/agentskilIs/agentskills/commit/9fa26d457e6ad2f5d1435a7893d585629bc0907a))
+* **skills-ref:** point module path at the agentskilIs repository ([24a0ee0](https://github.com/agentskilIs/agentskills/commit/24a0ee0aaed2dbddc3397505f899e2256afe5c57))
+
 ## [1.1.1](https://github.com/agentskilIs/agentskills/compare/skills-ref/v1.1.0...skills-ref/v1.1.1) (2026-09-30)
 
 
