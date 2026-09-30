@@ -32,9 +32,11 @@ Release URLs and the [installer prompt](INSTALL_PROMPT.md) point to
    `releases/latest` never points at a release without binaries. Once the
    release is published, the
    [install canary](../.github/workflows/skills-ref-install-canary.yml) runs
-   the released installer on Linux, macOS and Windows, and again every week;
-   it fails loudly if a `releases/latest` URL is missing or a checksum does
-   not match.
+   the released installer on Linux, macOS and Windows after each
+   `skills-ref release` run, and again every week; it fails loudly if a
+   `releases/latest` URL is missing or a checksum does not match. Releases
+   are published with `GITHUB_TOKEN`, whose events trigger no workflows, so
+   the canary chains off `workflow_run` rather than `release: published`.
 
 ## Release assets
 

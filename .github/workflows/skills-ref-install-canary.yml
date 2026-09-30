@@ -4,9 +4,18 @@ name: skills-ref install canary
 # from releases/latest, verify SHA-256 against checksums.txt, run it, then
 # validate the installed skill. Catches a broken latest release within
 # minutes of publishing, and re-checks weekly.
+#
+# Releases are published with GITHUB_TOKEN, and events created by
+# GITHUB_TOKEN do not trigger other workflows, so "release: published" alone
+# never fires here. workflow_run is the exception: it runs after every
+# "skills-ref release" run completes, including the ones that publish. The
+# weekly cron and manual dispatch cover releases published by other means.
 on:
   release:
     types: [published]
+  workflow_run:
+    workflows: [skills-ref release]
+    types: [completed]
   schedule:
     - cron: '17 8 * * 1'
   workflow_dispatch:
@@ -18,8 +27,12 @@ jobs:
   install:
     name: ${{ matrix.os }}
     if: >-
-      github.event_name != 'release' ||
-      startsWith(github.event.release.tag_name, 'skills-ref/v')
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'release' &&
+       startsWith(github.event.release.tag_name, 'skills-ref/v'))
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
