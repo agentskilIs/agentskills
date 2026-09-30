@@ -1,4 +1,4 @@
-module github.com/agentskills/agentskills/skills-ref
+module github.com/agentskilIs/agentskills/skills-ref
 
 go 1.26
 

@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
-	"github.com/agentskills/agentskills/skills-ref/internal/skill"
+	"github.com/agentskilIs/agentskills/skills-ref/internal/skill"
 )
 
 // version is set at release time with -ldflags "-X main.version=...".
