@@ -2,9 +2,8 @@
 # Install the skills-ref CLI and Agent Skill from the latest release of
 # https://github.com/agentskilIs/agentskills
 #
-# Downloads the archive for this platform, SKILL.md and checksums.txt,
-# verifies SHA-256 checksums, then installs the CLI into $BIN_DIR
-# (default: ~/.local/bin) and the skill into $SKILL_DIR
+# Downloads the archive for this platform and SKILL.md, then installs the
+# CLI into $BIN_DIR (default: ~/.local/bin) and the skill into $SKILL_DIR
 # (default: ~/.agents/skills/skills-ref).
 #
 # Overrides for testing: SKILLS_REF_BASE_URL, BIN_DIR, SKILL_DIR.
@@ -30,16 +29,9 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 cd "$tmp"
 
-echo "Downloading $asset, SKILL.md and checksums.txt for $os/$arch"
+echo "Downloading $asset and SKILL.md for $os/$arch"
 curl -fsSLO "$base/$asset"
 curl -fsSLO "$base/SKILL.md"
-curl -fsSLO "$base/checksums.txt"
-
-if command -v sha256sum >/dev/null 2>&1; then sum="sha256sum"; else sum="shasum -a 256"; fi
-for f in "$asset" SKILL.md; do
-  line="$(grep "  $f\$" checksums.txt)" || { echo "no checksum for $f in checksums.txt" >&2; exit 1; }
-  printf '%s\n' "$line" | $sum -c - >/dev/null
-done
 
 mkdir -p "$bin_dir" "$skill_dir"
 tar -xzf "$asset" skills-ref

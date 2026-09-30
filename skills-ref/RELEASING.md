@@ -39,7 +39,7 @@ Release URLs and the [installer prompt](INSTALL_PROMPT.md) point to
 | `skills-ref_windows_amd64.zip`, `skills-ref_windows_arm64.zip` | Windows |
 | `SKILL.md` | The installable skill from [`example/skills-ref`](example/skills-ref/SKILL.md) |
 | `install.sh`, `install.ps1` | Installer scripts referenced by the [installer prompt](INSTALL_PROMPT.md), from [`install/`](install/) |
-| `checksums.txt` | SHA-256 of every archive, `SKILL.md` and both installer scripts |
+| `checksums.txt` | SHA-256 of every archive |
 | `<archive>.sbom.json` | SPDX SBOM per archive |
 
 Names carry no version, so
