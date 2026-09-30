@@ -38,7 +38,8 @@ Release URLs and the [installer prompt](INSTALL_PROMPT.md) point to
 | `skills-ref_linux_amd64.tar.gz`, `skills-ref_linux_arm64.tar.gz` | Linux |
 | `skills-ref_windows_amd64.zip`, `skills-ref_windows_arm64.zip` | Windows |
 | `SKILL.md` | The installable skill from [`example/skills-ref`](example/skills-ref/SKILL.md) |
-| `checksums.txt` | SHA-256 of every archive and `SKILL.md` |
+| `install.sh`, `install.ps1` | Installer scripts referenced by the [installer prompt](INSTALL_PROMPT.md), from [`install/`](install/) |
+| `checksums.txt` | SHA-256 of every archive, `SKILL.md` and both installer scripts |
 | `<archive>.sbom.json` | SPDX SBOM per archive |
 
 Names carry no version, so
@@ -74,12 +75,14 @@ quarantined and run directly. Browser downloads need
 3. Merge to `main`. Check that release-please opens a PR titled
    `chore(main): release skills-ref 0.1.0`.
 4. Merge the release PR. Check that the `publish` job succeeds and that the
-   release is published as latest with 14 assets: 6 archives, 6 SBOMs,
-   `SKILL.md` and `checksums.txt`.
-5. Verify from a clean machine or container for each OS family: paste
-   [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md) into an agent on macOS, then on
-   Linux and Windows. Confirm `skills-ref validate ~/.agents/skills/skills-ref`
-   reports a valid skill.
+   release is published as latest with 16 assets: 6 archives, 6 SBOMs,
+   `SKILL.md`, `checksums.txt`, `install.sh` and `install.ps1`.
+5. Verify from a clean machine or container for each OS family: paste the
+   prompt from [`INSTALL_PROMPT.md`](INSTALL_PROMPT.md) (or the identical one
+   in the repository README) into an agent on macOS, then on Linux and
+   Windows. Confirm `skills-ref --version` and
+   `skills-ref validate ~/.agents/skills/skills-ref` succeed; the CLI lives in
+   `~/.local/bin`, which may need to be added to `PATH` first.
 
 ## Fixing a bad release
 
@@ -96,6 +99,15 @@ quarantined and run directly. Browser downloads need
 
 ```sh
 make snapshot   # the same archives in dist/, nothing published
+```
+
+To try the installer against the snapshot, stage the extra assets and serve
+`dist/` locally, then point the installer at it:
+
+```sh
+cp example/skills-ref/SKILL.md install/install.sh dist/
+python3 -m http.server -d dist 8000 &
+SKILLS_REF_BASE_URL=http://localhost:8000 sh install/install.sh
 ```
 
 ## Later

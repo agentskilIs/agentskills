@@ -1,18 +1,20 @@
 # Install skills-ref with your agent
 
 Copy the prompt below into a coding agent that can run shell commands. It
-installs the `skills-ref` skill and binary from the latest release into
+installs the `skills-ref` CLI and skill from the latest release of this
+repository: the CLI goes to `~/.local/bin` and the skill to
 `~/.agents/skills/skills-ref`.
 
 ```text
-Install the skills-ref Agent Skill and its binary from the latest GitHub release of https://github.com/agentskilIs/agentskills. Download only from that repository.
+Install the skills-ref Agent Skill and CLI from the latest GitHub release of https://github.com/agentskilIs/agentskills. Download only from that repository's release page.
 
-1. Create ~/.agents/skills/skills-ref (on Windows: $HOME\.agents\skills\skills-ref).
-2. Download https://github.com/agentskilIs/agentskills/releases/latest/download/SKILL.md and https://github.com/agentskilIs/agentskills/releases/latest/download/checksums.txt. Verify that the SHA-256 of SKILL.md matches its line in checksums.txt, then save SKILL.md in that directory. If the checksum does not match, stop and tell me.
-3. Read the saved SKILL.md and run the script in its "Install the binary" section for this operating system (macOS and Linux, or Windows PowerShell). Show me the script before running it. It puts the binary in the skill's scripts/ directory and stops on a checksum mismatch.
-4. Run `skills-ref validate ~/.agents/skills/skills-ref` with the installed binary and report the version and result.
-5. If you do not load skills from ~/.agents/skills, tell me which skills directory you use and ask before copying or linking the skill there.
+1. Detect my operating system (macOS, Linux, or Windows) and CPU architecture, and tell me what you detected.
+2. Download the installer for my OS (install.sh, or install.ps1 on Windows) and checksums.txt from https://github.com/agentskilIs/agentskills/releases/latest/download/ and verify the installer's SHA-256 against checksums.txt. If it does not match, stop and tell me.
+3. Show me the installer script, then run it. It installs the CLI into ~/.local/bin and the skill into ~/.agents/skills/skills-ref, verifying every download against checksums.txt itself and stopping on a mismatch.
+4. If the installer reports that its bin directory is not on my PATH, offer to add it to my shell profile.
+5. Run `skills-ref --version` and `skills-ref validate ~/.agents/skills/skills-ref`, then report the detected platform, the version, and the validation result.
+6. If you load skills from a different directory than ~/.agents/skills, tell me which one and ask before copying or linking the skill there.
 ```
 
-To update later, paste the same prompt again; it replaces the skill and binary
+To update later, paste the same prompt again; it replaces the CLI and skill
 with the latest release.

@@ -46,3 +46,18 @@ jobs:
         run: go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...
       - name: Test
         run: go test -race ./...
+
+  install-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shellcheck install.sh
+        run: shellcheck skills-ref/install/install.sh
+      - name: Parse install.ps1
+        run: |
+          pwsh -NoProfile -Command - <<'PS'
+          $tokens = $null
+          $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile("$env:GITHUB_WORKSPACE/skills-ref/install/install.ps1", [ref]$tokens, [ref]$errors)
+          if ($errors) { $errors | ForEach-Object { Write-Host $_ }; exit 1 }
+          PS

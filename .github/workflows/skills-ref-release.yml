@@ -89,12 +89,15 @@ jobs:
           fi
       - name: Stage release assets
         working-directory: skills-ref
-        run: cp example/skills-ref/SKILL.md dist/
+        run: |
+          cp example/skills-ref/SKILL.md dist/
+          cp install/install.sh install/install.ps1 dist/
       - name: Upload assets and publish
         working-directory: skills-ref/dist
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$TAG" --clobber \
-            ./*.tar.gz ./*.zip ./*.sbom.json SKILL.md checksums.txt
+            ./*.tar.gz ./*.zip ./*.sbom.json SKILL.md checksums.txt \
+            install.sh install.ps1
           gh release edit "$TAG" --draft=false --latest

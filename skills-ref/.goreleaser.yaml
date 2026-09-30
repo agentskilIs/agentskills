@@ -40,9 +40,12 @@ archives:
 checksum:
   name_template: checksums.txt
   algorithm: sha256
-  # The installable skill is released next to the binaries.
+  # The installable skill and the installer scripts referenced by the
+  # installer prompt are released next to the binaries.
   extra_files:
     - glob: ./example/skills-ref/SKILL.md
+    - glob: ./install/install.sh
+    - glob: ./install/install.ps1
 sboms:
   - artifacts: archive
 changelog:
