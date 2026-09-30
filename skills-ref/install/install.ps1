@@ -1,9 +1,10 @@
 # Install the skills-ref CLI and Agent Skill from the latest release of
 # https://github.com/agentskilIs/agentskills
 #
-# Downloads the archive for this platform and SKILL.md, then installs the
-# CLI into $env:BIN_DIR (default: ~\.local\bin) and the skill into
-# $env:SKILL_DIR (default: ~\.agents\skills\skills-ref).
+# Downloads the archive for this platform, SKILL.md and checksums.txt,
+# verifies SHA-256 checksums, then installs the CLI into $env:BIN_DIR
+# (default: ~\.local\bin) and the skill into $env:SKILL_DIR
+# (default: ~\.agents\skills\skills-ref).
 #
 # Overrides for testing: SKILLS_REF_BASE_URL, BIN_DIR, SKILL_DIR.
 $ErrorActionPreference = 'Stop'
@@ -17,9 +18,18 @@ $asset = "skills-ref_windows_$arch.zip"
 
 $tmp = New-Item -ItemType Directory -Path (Join-Path ([IO.Path]::GetTempPath()) ([guid]::NewGuid()))
 try {
-    Write-Host "Downloading $asset and SKILL.md for windows/$arch"
+    Write-Host "Downloading $asset, SKILL.md and checksums.txt for windows/$arch"
     Invoke-WebRequest "$base/$asset" -OutFile "$tmp\$asset"
     Invoke-WebRequest "$base/SKILL.md" -OutFile "$tmp\SKILL.md"
+    Invoke-WebRequest "$base/checksums.txt" -OutFile "$tmp\checksums.txt"
+
+    foreach ($f in @($asset, 'SKILL.md')) {
+        $line = Select-String -Path "$tmp\checksums.txt" -Pattern ('  ' + [regex]::Escape($f) + '$')
+        if (-not $line) { throw "no checksum for $f in checksums.txt" }
+        $want = $line.Line.Split(' ')[0]
+        $got = (Get-FileHash "$tmp\$f" -Algorithm SHA256).Hash.ToLower()
+        if ($got -ne $want) { throw "checksum mismatch for $f" }
+    }
 
     New-Item -ItemType Directory -Force -Path $binDir, $skillDir | Out-Null
     Expand-Archive "$tmp\$asset" -DestinationPath $tmp

@@ -28,7 +28,9 @@ scripts merely to validate it.
 
 Download only from the latest release of
 `https://github.com/agentskilIs/agentskills`. Get `install.sh` (macOS and
-Linux) or `install.ps1` (Windows PowerShell), then run it. The installer
-detects the platform, puts the CLI in `~/.local/bin` and this skill in
+Linux) or `install.ps1` (Windows PowerShell) together with `checksums.txt`,
+verify the script's SHA-256 against `checksums.txt`, then run it. Stop on a
+checksum mismatch. The installer detects the platform, verifies every
+download, puts the CLI in `~/.local/bin` and this skill in
 `~/.agents/skills/skills-ref`, and prints a line to add to the shell profile
 if the bin directory is not on `PATH`.

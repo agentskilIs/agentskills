@@ -23,11 +23,18 @@ Release URLs and the [installer prompt](INSTALL_PROMPT.md) point to
    - runs the tests;
    - builds the archives with GoReleaser;
    - checks that the binary reports the version;
+   - checks that `checksums.txt` covers every installable asset and that
+     `install.sh` succeeds against the staged assets;
    - uploads the assets;
    - publishes the release and marks it as latest.
 
    The release stays a draft until every asset is uploaded, so
-   `releases/latest` never points at a release without binaries.
+   `releases/latest` never points at a release without binaries. Once the
+   release is published, the
+   [install canary](../.github/workflows/skills-ref-install-canary.yml) runs
+   the released installer on Linux, macOS and Windows, and again every week;
+   it fails loudly if a `releases/latest` URL is missing or a checksum does
+   not match.
 
 ## Release assets
 
@@ -39,7 +46,7 @@ Release URLs and the [installer prompt](INSTALL_PROMPT.md) point to
 | `skills-ref_windows_amd64.zip`, `skills-ref_windows_arm64.zip` | Windows |
 | `SKILL.md` | The installable skill from [`example/skills-ref`](example/skills-ref/SKILL.md) |
 | `install.sh`, `install.ps1` | Installer scripts referenced by the [installer prompt](INSTALL_PROMPT.md), from [`install/`](install/) |
-| `checksums.txt` | SHA-256 of every archive |
+| `checksums.txt` | SHA-256 of every archive, `SKILL.md` and both installer scripts |
 | `<archive>.sbom.json` | SPDX SBOM per archive |
 
 Names carry no version, so
@@ -105,7 +112,7 @@ To try the installer against the snapshot, stage the extra assets and serve
 `dist/` locally, then point the installer at it:
 
 ```sh
-cp example/skills-ref/SKILL.md install/install.sh dist/
+cp example/skills-ref/SKILL.md install/install.sh install/install.ps1 dist/
 python3 -m http.server -d dist 8000 &
 SKILLS_REF_BASE_URL=http://localhost:8000 sh install/install.sh
 ```

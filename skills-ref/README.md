@@ -14,8 +14,8 @@ go install github.com/agentskills/agentskills/skills-ref/cmd/skills-ref@latest
 ```
 
 To install the CLI and skill with a coding agent, paste the prompt in
-[`INSTALL_PROMPT.md`](INSTALL_PROMPT.md). The agent runs `install.sh` or
-`install.ps1` from the release, which puts the CLI in
+[`INSTALL_PROMPT.md`](INSTALL_PROMPT.md). The agent runs the verified
+`install.sh` or `install.ps1` from the release, which puts the CLI in
 `~/.local/bin` and the skill in `~/.agents/skills/skills-ref`.
 
 Or download the archive for your platform and `checksums.txt` from the
