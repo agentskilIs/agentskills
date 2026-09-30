@@ -10,7 +10,7 @@ Reference command-line tool for Agent Skills, written in Go.
 With Go 1.26 or later:
 
 ```sh
-go install github.com/agentskills/agentskills/skills-ref/cmd/skills-ref@latest
+go install github.com/agentskilIs/agentskills/skills-ref/cmd/skills-ref@latest
 ```
 
 To install the CLI and skill with a coding agent, paste the prompt in
