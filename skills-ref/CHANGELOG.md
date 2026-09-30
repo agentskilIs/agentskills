@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/agentskilIs/agentskills/compare/skills-ref/v1.0.0...skills-ref/v1.1.0) (2026-09-30)
+
+
+### Features
+
+* **skills-ref:** add installer scripts and README install prompt ([e37bad3](https://github.com/agentskilIs/agentskills/commit/e37bad32f29ddc6ee2450ea5b1fe3188282122ce))
+* **skills-ref:** drop installer checksum verification ([8eeb277](https://github.com/agentskilIs/agentskills/commit/8eeb277a1d3ee19e5e53dad64b3cf49a5a69a8a9))
+
 ## 1.0.0 (2026-09-28)
 
 
