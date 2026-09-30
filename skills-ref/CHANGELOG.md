@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/agentskilIs/agentskills/compare/skills-ref/v1.1.0...skills-ref/v1.1.1) (2026-09-30)
+
+
+### Bug Fixes
+
+* **skills-ref:** restore installer checksums and gate releases on them ([5e03a77](https://github.com/agentskilIs/agentskills/commit/5e03a778ba1865c60c52f4bea6bdb4069831b6de))
+
 ## [1.1.0](https://github.com/agentskilIs/agentskills/compare/skills-ref/v1.0.0...skills-ref/v1.1.0) (2026-09-30)
 
 
